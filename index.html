@@ -30,6 +30,59 @@
             min-height: 100vh;
         }
 
+        /* Login Screen Overlay */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--hover-bg);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .login-card {
+            background: var(--bg-color);
+            border: 2px solid var(--text-color);
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+        }
+
+        .login-role-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-tab {
+            padding: 0.65rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid var(--border-color);
+            background: var(--hover-bg);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+
+        .role-tab.active {
+            background: var(--text-color);
+            color: var(--bg-color);
+            border-color: var(--text-color);
+        }
+
+        .role-tab.admin-tab.active {
+            background: var(--admin-color);
+            border-color: var(--admin-color);
+            color: #fff;
+        }
+
         /* Sidebar */
         aside {
             width: 260px;
@@ -45,7 +98,14 @@
             font-size: 1.5rem;
             font-weight: 700;
             letter-spacing: -0.5px;
-            margin-bottom: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .user-greeting {
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
         }
 
         .role-badge {
@@ -93,6 +153,9 @@
             margin-top: auto;
             padding-top: 1.5rem;
             border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
         }
 
         /* Main Content */
@@ -356,7 +419,7 @@
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
         @media print {
-            aside, header button, .filter-tabs, .actions-cell, .role-switcher { display: none !important; }
+            aside, header button, .filter-tabs, .actions-cell, .role-switcher, #login-overlay { display: none !important; }
             main { background: white; }
             .page-view { padding: 0; }
             .panel { border: none; padding: 0; }
@@ -365,8 +428,36 @@
 </head>
 <body>
 
+    <!-- LOGIN SCREEN OVERLAY -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="logo" style="margin-bottom: 0.25rem;">SysInventory.</div>
+            <p style="font-size: 0.85rem; color: var(--secondary-text); margin-bottom: 1.5rem;">Sign & Print Shop Portal Login</p>
+
+            <label>Select Portal Role</label>
+            <div class="login-role-tabs">
+                <div id="tab-emp" class="role-tab active" onclick="selectLoginRole('employee')">Employee</div>
+                <div id="tab-adm" class="role-tab admin-tab" onclick="selectLoginRole('admin')">Administrator</div>
+            </div>
+
+            <form onsubmit="event.preventDefault(); handleLogin();">
+                <div class="form-group">
+                    <label>Your Name / Staff ID (Optional)</label>
+                    <input type="text" id="login-username" placeholder="e.g. Juan (or leave blank)">
+                </div>
+                <div class="form-group">
+                    <label id="login-pass-label">Employee Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password..." required>
+                </div>
+                <p id="login-error" class="text-red" style="font-size: 0.8rem; margin-bottom: 1rem; display: none;">Invalid password for selected role.</p>
+                <button type="submit" class="btn" id="login-submit-btn" style="width: 100%;">Login to Portal</button>
+            </form>
+        </div>
+    </div>
+
     <aside>
         <div class="logo">SysInventory.</div>
+        <div class="user-greeting" id="user-display">Logged in</div>
         <div id="role-indicator" class="role-badge">Employee</div>
         
         <ul class="nav-menu">
@@ -375,16 +466,20 @@
             <li><a data-target="view-tracker">Stock Movements</a></li>
             <li><a data-target="view-history">Monthly History</a></li>
             <li id="nav-audit" class="admin-only" style="display:none;"><a data-target="view-audit">Admin Activity Log</a></li>
-            <li id="nav-accounts" class="admin-only" style="display:none;"><a data-target="view-accounts">Create Account</a></li>
+            <li id="nav-accounts" class="admin-only" style="display:none;"><a data-target="view-accounts">Passwords & Users</a></li>
         </ul>
 
         <div class="role-switcher">
-            <label style="font-size: 0.75rem;">Switch View Role:</label>
-            <select id="role-select" onchange="switchRole(this.value)">
-                <option value="employee">Employee (Upload & Track)</option>
-                <option value="admin">Administrator (Manage)</option>
-            </select>
-            <button class="btn btn-outline btn-sm admin-only" onclick="resetDemoData()" style="width:100%; margin-top:0.75rem; display:none;" title="Reset to default 5-10 stock counts">Reset Default Data</button>
+            <!-- Only Admins can preview the Employee view without logging out -->
+            <div id="admin-view-switcher" style="display:none;">
+                <label style="font-size: 0.72rem;">Admin View Mode:</label>
+                <select id="role-select" onchange="switchRole(this.value)">
+                    <option value="admin">Administrator (Manage)</option>
+                    <option value="employee">Preview Employee View</option>
+                </select>
+            </div>
+            <button class="btn btn-outline btn-sm admin-only" onclick="resetDemoData()" style="width:100%; display:none;" title="Reset to default 5-10 stock counts">Reset Default Data</button>
+            <button class="btn btn-outline btn-danger btn-sm" onclick="logoutUser()" style="width:100%;">Logout / Switch User</button>
         </div>
     </aside>
 
@@ -397,7 +492,7 @@
                     <p class="header-sub">Live status of shop materials (5–10 target scale) and submitted reports.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button class="btn" onclick="navigateTo('view-items')">Upload Stock Left &rarr;</button>
+                    <button class="btn" onclick="navigateTo('view-items')">Upload Stock Left →</button>
                     <button class="btn btn-outline admin-only" onclick="openCategoryModal()" style="display:none;">+ Categories</button>
                     <button class="btn btn-outline admin-only" onclick="openAddModal()" style="display:none;">+ Add Material</button>
                 </div>
@@ -623,7 +718,7 @@
                         <thead>
                             <tr>
                                 <th>Timestamp</th>
-                                <th>Role</th>
+                                <th>User / Role</th>
                                 <th>Action Type</th>
                                 <th>Details</th>
                             </tr>
@@ -634,37 +729,55 @@
             </div>
         </div>
 
-        <!-- CREATE ACCOUNT VIEW (ADMIN ONLY) -->
+        <!-- PASSWORDS & USER MANAGEMENT VIEW (ADMIN ONLY) -->
         <div id="view-accounts" class="page-view">
             <header>
-                <h1>User Management</h1>
+                <div>
+                    <h1>Passwords & User Accounts</h1>
+                    <p class="header-sub">Manage default role passwords or add individual staff accounts.</p>
+                </div>
             </header>
-            <div class="panel" style="max-width: 550px;">
-                <h2 style="margin-bottom: 1.25rem;">Create New Account</h2>
-                <form onsubmit="event.preventDefault(); createAccount(this);">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" name="fullname" placeholder="e.g. Juan Dela Cruz" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" name="email" placeholder="staff@printshop.com" required>
-                    </div>
-                    <div class="form-row">
+            <div class="content-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+                <div class="panel">
+                    <h2 style="margin-bottom: 1.25rem;">Create / Update User Account</h2>
+                    <form onsubmit="event.preventDefault(); createAccount(this);">
                         <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" required>
+                            <label>Full Name / Username</label>
+                            <input type="text" name="fullname" placeholder="e.g. Juan" required>
                         </div>
-                        <div class="form-group">
-                            <label>Role</label>
-                            <select name="role" required>
-                                <option value="Employee">Employee</option>
-                                <option value="Administrator">Administrator</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="text" name="password" placeholder="e.g. secret123" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select name="role" required>
+                                    <option value="employee">Employee</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
                         </div>
+                        <button type="submit" class="btn" style="width:100%;">Save User Account</button>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <h2 style="margin-bottom: 1.25rem;">Active Accounts & Passwords</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Password</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accounts-body"></tbody>
+                        </table>
                     </div>
-                    <button type="submit" class="btn">Create User</button>
-                </form>
+                </div>
             </div>
         </div>
     </main>
@@ -674,7 +787,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Create & Manage Categories</h2>
-                <button class="close-btn" onclick="closeCategoryModal()">&times;</button>
+                <button class="close-btn" onclick="closeCategoryModal()">×</button>
             </div>
             <p style="font-size: 0.85rem; color: var(--secondary-text); margin-bottom: 1rem;">
                 Add custom categories for your shop (e.g., <strong>Inks</strong>, <strong>Eyelets</strong>, <strong>Acrylic</strong>).
@@ -704,7 +817,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="item-modal-title">Add New Material</h2>
-                <button class="close-btn" onclick="closeItemModal()">&times;</button>
+                <button class="close-btn" onclick="closeItemModal()">×</button>
             </div>
             <form id="item-form">
                 <input type="hidden" id="edit-sku">
@@ -752,7 +865,7 @@
                     <h2 id="sub-modal-title">Submitted Stock Report</h2>
                     <p id="sub-modal-meta" style="font-size: 0.85rem; color: var(--secondary-text);"></p>
                 </div>
-                <button class="close-btn" onclick="closeSubmissionModal()">&times;</button>
+                <button class="close-btn" onclick="closeSubmissionModal()">×</button>
             </div>
             <div id="sub-modal-note" style="background: var(--hover-bg); padding: 0.75rem 1rem; border-left: 3px solid var(--text-color); margin-bottom: 1rem; font-size: 0.9rem;"></div>
             <div class="table-container" style="max-height: 50vh; overflow-y: auto; margin-bottom: 1.25rem;">
@@ -778,20 +891,34 @@
     <div class="toast-container" id="toast-container"></div>
 
     <script>
-        /* --- State & Data (Small Scale 5-10 Stock Version V4) --- */
+        /* --- State & Data (Small Scale 5-10 Stock Version V4 + Auth) --- */
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby901Pntb9Lij2zdFC3UARSdcRcHy6J2Em9jdP0BYmCCyTXybG_B8V_SKjBr8WzAhgi/exec';
+
         const STORAGE_KEYS = {
             INV: 'sysInventoryPrintShopV4',
             SUB: 'sysSubmissionsPrintShopV4',
             CAT: 'sysCategoriesPrintShopV4',
-            LOG: 'sysAuditLogPrintShopV4'
+            LOG: 'sysAuditLogPrintShopV4',
+            ACC: 'sysAccountsPrintShopV4',
+            SESSION: 'sysActiveSessionV4'
         };
 
+        // Default Accounts (Admin: admin123 | Employee: staff123)
+        const DEFAULT_ACCOUNTS = [
+            { name: 'Admin', role: 'admin', pass: 'admin123' },
+            { name: 'Employee', role: 'employee', pass: 'staff123' }
+        ];
+
+        let selectedLoginTab = 'employee';
+        let authenticatedRole = null; // 'admin' or 'employee'
+        let currentUserName = 'Employee';
         let currentRole = 'employee';
         let activeCategory = 'ALL';
         let categories = [];
         let inventoryData = [];
         let submissionHistory = [];
         let auditLog = [];
+        let accounts = [];
         let draftStockLeft = {};
 
         function showToast(message) {
@@ -803,13 +930,77 @@
             setTimeout(() => { toast.remove(); }, 3000);
         }
 
+        /* --- Authentication & Login Logic --- */
+        function selectLoginRole(role) {
+            selectedLoginTab = role;
+            document.getElementById('tab-emp').classList.toggle('active', role === 'employee');
+            document.getElementById('tab-adm').classList.toggle('active', role === 'admin');
+            document.getElementById('login-pass-label').textContent = role === 'admin' ? 'Administrator Password' : 'Employee Password';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        function handleLogin() {
+            const nameInput = document.getElementById('login-username').value.trim();
+            const passInput = document.getElementById('login-password').value.trim();
+            const errorEl = document.getElementById('login-error');
+
+            // Verify against accounts list for the chosen role
+            const matchedAccount = accounts.find(acc => 
+                acc.role === selectedLoginTab && 
+                String(acc.pass) === passInput &&
+                (!nameInput || acc.name.toLowerCase() === nameInput.toLowerCase() || acc.name.toLowerCase() === selectedLoginTab)
+            );
+
+            if (!matchedAccount) {
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            errorEl.style.display = 'none';
+            authenticatedRole = selectedLoginTab;
+            currentUserName = nameInput || matchedAccount.name;
+
+            sessionStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify({
+                role: authenticatedRole,
+                user: currentUserName
+            }));
+
+            applyAuthenticatedSession();
+            showToast(`Welcome, ${currentUserName}!`);
+        }
+
+        function applyAuthenticatedSession() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('user-display').textContent = `User: ${currentUserName}`;
+            
+            // Only show the sidebar view-mode switcher if logged in as Administrator
+            const adminSwitcher = document.getElementById('admin-view-switcher');
+            adminSwitcher.style.display = authenticatedRole === 'admin' ? 'block' : 'none';
+            
+            if (authenticatedRole === 'admin') {
+                document.getElementById('role-select').value = 'admin';
+                switchRole('admin');
+            } else {
+                switchRole('employee');
+            }
+        }
+
+        function logoutUser() {
+            sessionStorage.removeItem(STORAGE_KEYS.SESSION);
+            authenticatedRole = null;
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-overlay').style.display = 'flex';
+            navigateTo('view-dashboard');
+        }
+
         function logActivity(action, details) {
             const now = new Date();
             const timestamp = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
                               now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const actorLabel = `${currentUserName} (${currentRole === 'admin' ? 'Admin' : 'Employee'})`;
             auditLog.unshift({
                 time: timestamp,
-                role: currentRole === 'admin' ? 'Admin' : 'Employee',
+                role: actorLabel,
                 action: action,
                 details: details
             });
@@ -820,6 +1011,11 @@
 
         /* --- Role Management --- */
         function switchRole(role) {
+            // Prevent employees from switching to admin via console or DOM manipulation
+            if (authenticatedRole !== 'admin' && role === 'admin') {
+                role = 'employee';
+            }
+
             currentRole = role;
             const badge = document.getElementById('role-indicator');
             const adminElements = document.querySelectorAll('.admin-only');
@@ -863,12 +1059,38 @@
             link.addEventListener('click', () => { navigateTo(link.getAttribute('data-target')); });
         });
 
-        /* --- Load & Save Data (Calibrated to 5-10 Stock Counts) --- */
-        function loadData() {
+        /* --- Load & Save Data (Google Sheets Integration) --- */
+        async function loadData() {
+            try {
+                showToast("Syncing database...");
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+
+                if (data && data.categories && data.categories.length > 0) {
+                    categories = data.categories;
+                    inventoryData = data.inventory || [];
+                    submissionHistory = data.submissions || [];
+                    auditLog = data.auditLog || [];
+                    accounts = (data.accounts && data.accounts.length > 0) ? data.accounts : [...DEFAULT_ACCOUNTS];
+                    
+                    inventoryData.forEach(item => { draftStockLeft[item.sku] = item.qty; });
+                    
+                    showToast("Database synced!");
+                    updateUI();
+                    return;
+                }
+            } catch (error) {
+                console.error("Failed to load from Sheets, checking local backup...", error);
+            }
+
+            // FALLBACK: Load from local storage or use initial demo data
             const storedCat = localStorage.getItem(STORAGE_KEYS.CAT);
             const storedInv = localStorage.getItem(STORAGE_KEYS.INV);
             const storedSub = localStorage.getItem(STORAGE_KEYS.SUB);
             const storedLog = localStorage.getItem(STORAGE_KEYS.LOG);
+            const storedAcc = localStorage.getItem(STORAGE_KEYS.ACC);
+
+            accounts = storedAcc ? JSON.parse(storedAcc) : [...DEFAULT_ACCOUNTS];
 
             if (storedCat) {
                 categories = JSON.parse(storedCat);
@@ -883,22 +1105,16 @@
             if (storedInv) {
                 inventoryData = JSON.parse(storedInv);
             } else {
-                // Small Shop Stock Levels: Targets between 5 and 10, Current Left between 1 and 9
                 inventoryData = [
-                    // Tarp (6, 5, 4, 3ft) - Targets: 6 to 8 Rolls
                     { sku: 'TRP-6FT', cat: 'Tarp', name: 'Tarp - 6ft', startQty: 6, qty: 2, targetQty: 6, unit: 'Rolls', periodIn: 0, periodOut: 4 },
                     { sku: 'TRP-5FT', cat: 'Tarp', name: 'Tarp - 5ft', startQty: 6, qty: 4, targetQty: 6, unit: 'Rolls', periodIn: 1, periodOut: 3 },
                     { sku: 'TRP-4FT', cat: 'Tarp', name: 'Tarp - 4ft', startQty: 8, qty: 8, targetQty: 8, unit: 'Rolls', periodIn: 2, periodOut: 2 },
                     { sku: 'TRP-3FT', cat: 'Tarp', name: 'Tarp - 3ft', startQty: 8, qty: 3, targetQty: 8, unit: 'Rolls', periodIn: 0, periodOut: 5 },
-
-                    // Stickers (matte, glossy, clear, laminating film, frosted) - Targets: 5 to 8 Rolls
                     { sku: 'STK-MAT', cat: 'Stickers', name: 'Sticker - Matte', startQty: 8, qty: 5, targetQty: 8, unit: 'Rolls', periodIn: 1, periodOut: 4 },
                     { sku: 'STK-GLS', cat: 'Stickers', name: 'Sticker - Glossy', startQty: 8, qty: 2, targetQty: 8, unit: 'Rolls', periodIn: 0, periodOut: 6 },
                     { sku: 'STK-CLR', cat: 'Stickers', name: 'Sticker - Clear', startQty: 5, qty: 3, targetQty: 5, unit: 'Rolls', periodIn: 0, periodOut: 2 },
                     { sku: 'STK-LAM', cat: 'Stickers', name: 'Laminating Film', startQty: 8, qty: 7, targetQty: 8, unit: 'Rolls', periodIn: 2, periodOut: 3 },
                     { sku: 'STK-FRS', cat: 'Stickers', name: 'Sticker - Frosted', startQty: 5, qty: 1, targetQty: 5, unit: 'Rolls', periodIn: 0, periodOut: 4 },
-
-                    // Sintraboard (3mm, 5mm) - Targets: 8 to 10 Sheets
                     { sku: 'SNT-3MM', cat: 'Sintraboard', name: 'Sintraboard - 3mm', startQty: 10, qty: 3, targetQty: 10, unit: 'Sheets', periodIn: 0, periodOut: 7 },
                     { sku: 'SNT-5MM', cat: 'Sintraboard', name: 'Sintraboard - 5mm', startQty: 8, qty: 6, targetQty: 8, unit: 'Sheets', periodIn: 2, periodOut: 4 }
                 ];
@@ -956,14 +1172,36 @@
                 ];
             }
 
-            saveData();
+            updateUI();
         }
 
-        function saveData() {
+        async function saveData() {
             localStorage.setItem(STORAGE_KEYS.CAT, JSON.stringify(categories));
             localStorage.setItem(STORAGE_KEYS.INV, JSON.stringify(inventoryData));
             localStorage.setItem(STORAGE_KEYS.SUB, JSON.stringify(submissionHistory));
             localStorage.setItem(STORAGE_KEYS.LOG, JSON.stringify(auditLog));
+            localStorage.setItem(STORAGE_KEYS.ACC, JSON.stringify(accounts));
+
+            const payload = {
+                action: "saveAll",
+                inventory: inventoryData,
+                categories: categories,
+                submissions: submissionHistory,
+                auditLog: auditLog,
+                accounts: accounts
+            };
+
+            try {
+                if (SCRIPT_URL !== 'YOUR_GOOGLE_WEB_APP_URL_HERE') {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to sync with Google Sheets", error);
+            }
         }
 
         function resetDemoData() {
@@ -971,14 +1209,12 @@
                 Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
                 activeCategory = 'ALL';
                 loadData();
-                updateUI();
-                showToast('Data reset to default 5–10 stock scale!');
+                showToast('Data reset triggered!');
             }
         }
 
         /* --- Dynamic Category Management --- */
         function renderCategoriesUI() {
-            // 1. Render Filter Pills
             const filterContainer = document.getElementById('category-filter-tabs');
             filterContainer.innerHTML = `<button class="filter-pill ${activeCategory === 'ALL' ? 'active' : ''}" onclick="setCategory('ALL')">All Materials</button>`;
             
@@ -990,7 +1226,6 @@
                 `;
             });
 
-            // 2. Render Select Dropdown inside Material Modal
             const catSelect = document.getElementById('item-cat');
             if (catSelect) {
                 catSelect.innerHTML = '';
@@ -999,7 +1234,6 @@
                 });
             }
 
-            // 3. Render Category List inside Category Modal
             const listContainer = document.getElementById('category-list-container');
             if (listContainer) {
                 listContainer.innerHTML = '';
@@ -1009,7 +1243,7 @@
                         <div class="cat-tag-item">
                             <div>
                                 <strong>${c.name}</strong>
-                                <span style="font-size:0.75rem; color:var(--secondary-text); margin-left:0.5rem;">Prefix: ${c.prefix} &bull; ${itemCount} items</span>
+                                <span style="font-size:0.75rem; color:var(--secondary-text); margin-left:0.5rem;">Prefix: ${c.prefix} • ${itemCount} items</span>
                             </div>
                             <button type="button" class="btn btn-outline btn-danger btn-xs" onclick="deleteCategory('${c.name}')">Delete</button>
                         </div>
@@ -1165,14 +1399,14 @@
                 id: reqId,
                 month: monthName,
                 date: dateStr,
-                by: currentRole === 'admin' ? 'Admin' : 'Employee',
+                by: currentUserName,
                 note: noteText,
                 status: 'Pending',
                 snapshots: snapshots
             });
 
             noteInput.value = '';
-            logActivity('Stock Report Submitted', `Report ${reqId} submitted (${noteText})`);
+            logActivity('Stock Report Submitted', `Report ${reqId} submitted by ${currentUserName} (${noteText})`);
             saveData();
             updateUI();
             showToast(`Stock Left Report (${reqId}) submitted!`);
@@ -1218,7 +1452,6 @@
 
         /* --- UI Rendering --- */
         function getStockStatus(qty, targetQty) {
-            // For small stock (5-10), 2 or fewer is Critical Low
             const isCritical = qty <= 2 && qty < targetQty;
             const needsOrder = qty < targetQty;
             if (isCritical) return { label: 'Critical Low', class: 'alert', isCritical: true };
@@ -1323,6 +1556,7 @@
             populateMonthFilter();
             renderHistoryTable();
             renderAuditTable();
+            renderAccountsTable();
         }
 
         /* --- Stock Movements Table --- */
@@ -1397,7 +1631,6 @@
                 `;
             });
 
-            // Populate Dashboard Active Reports table
             [...submissionHistory].reverse().forEach(req => {
                 if (req.status === 'Pending') pendingCount++;
                 const badgeClass = req.status === 'Pending' ? 'warning' : (req.status === 'Approved' ? 'success' : 'alert');
@@ -1454,12 +1687,57 @@
             }
         }
 
+        /* --- Accounts & Passwords Management --- */
+        function renderAccountsTable() {
+            const tbody = document.getElementById('accounts-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            accounts.forEach((acc, idx) => {
+                const isDefault = idx < 2;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${acc.name}</strong></td>
+                        <td><span class="badge ${acc.role === 'admin' ? 'success' : ''}">${acc.role}</span></td>
+                        <td><code>${acc.pass}</code></td>
+                        <td>
+                            ${isDefault ? '<span style="font-size:0.75rem; color:var(--secondary-text);">Default Role</span>' : `<button class="btn btn-outline btn-danger btn-xs" onclick="deleteAccount(${idx})">Remove</button>`}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
         function createAccount(form) {
             const name = form.fullname.value.trim();
+            const pass = form.password.value.trim();
             const role = form.role.value;
-            logActivity('Account Created', `Created ${role} account for ${name}`);
-            showToast(`Account created for ${name} (${role})!`);
+
+            const existing = accounts.find(a => a.name.toLowerCase() === name.toLowerCase() && a.role === role);
+            if (existing) {
+                existing.pass = pass;
+                logActivity('Password Updated', `Updated password for ${name} (${role})`);
+                showToast(`Updated password for ${name}!`);
+            } else {
+                accounts.push({ name, role, pass });
+                logActivity('Account Created', `Created ${role} account for ${name}`);
+                showToast(`Account created for ${name}!`);
+            }
+
+            saveData();
+            renderAccountsTable();
             form.reset();
+        }
+
+        function deleteAccount(idx) {
+            const acc = accounts[idx];
+            if (!acc) return;
+            if (confirm(`Remove user account "${acc.name}"?`)) {
+                accounts.splice(idx, 1);
+                logActivity('Account Removed', `Deleted account ${acc.name}`);
+                saveData();
+                renderAccountsTable();
+                showToast('Account removed.');
+            }
         }
 
         /* --- Modal: View Submitted Stocks --- */
@@ -1669,9 +1947,19 @@
             if (e.target === document.getElementById('category-modal')) closeCategoryModal();
         });
 
-        // Initialize App
-        loadData();
-        switchRole('employee');
+        // Initialize App once the DOM has fully loaded
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadData();
+            const savedSession = sessionStorage.getItem(STORAGE_KEYS.SESSION);
+            if (savedSession) {
+                try {
+                    const parsed = JSON.parse(savedSession);
+                    authenticatedRole = parsed.role;
+                    currentUserName = parsed.user;
+                    applyAuthenticatedSession();
+                } catch (e) {}
+            }
+        });
     </script>
 </body>
 </html>
