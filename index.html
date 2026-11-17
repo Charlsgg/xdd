@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SysInventory | Sign & Print Portal</title>
     <style>
         /* Base Styles & Typography */
@@ -28,6 +28,7 @@
             -webkit-font-smoothing: antialiased;
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* Login Screen Overlay */
@@ -49,6 +50,7 @@
             max-width: 400px;
             padding: 2.5rem 2rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            border-radius: 6px;
         }
 
         .login-role-tabs {
@@ -69,6 +71,7 @@
             cursor: pointer;
             text-align: center;
             transition: all 0.15s ease;
+            border-radius: 4px;
         }
 
         .role-tab.active {
@@ -83,6 +86,21 @@
             color: #fff;
         }
 
+        /* Sidebar Overlay (Mobile) */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1040;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         /* Sidebar */
         aside {
             width: 260px;
@@ -91,7 +109,8 @@
             display: flex;
             flex-direction: column;
             background: var(--bg-color);
-            z-index: 10;
+            z-index: 1050;
+            transition: transform 0.3s ease;
         }
 
         .logo {
@@ -119,6 +138,7 @@
             background: var(--text-color);
             color: var(--bg-color);
             align-self: flex-start;
+            border-radius: 12px;
         }
         
         .role-badge.admin {
@@ -164,12 +184,15 @@
             background-color: var(--hover-bg);
             position: relative;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .page-view {
             display: none;
             padding: 2.5rem 4%;
             animation: fadeIn 0.25s ease;
+            flex: 1;
         }
 
         .page-view.active { display: block; }
@@ -182,7 +205,7 @@
         header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: flex-start;
             margin-bottom: 2rem;
             border-bottom: 2px solid var(--text-color);
             padding-bottom: 1rem;
@@ -190,11 +213,28 @@
             gap: 1rem;
         }
 
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: 1px solid var(--text-color);
+            font-size: 1.2rem;
+            padding: 0.4rem 0.6rem;
+            cursor: pointer;
+            color: var(--text-color);
+            border-radius: 4px;
+        }
+
         header h1 {
             font-size: 2.2rem;
             font-weight: 800;
             letter-spacing: -1px;
-            line-height: 1;
+            line-height: 1.2;
         }
 
         .header-sub {
@@ -206,7 +246,7 @@
         /* Grid Layouts */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.25rem;
             margin-bottom: 2rem;
         }
@@ -220,6 +260,7 @@
             border: 1px solid var(--border-color);
             padding: 1.75rem;
             margin-bottom: 1.5rem;
+            border-radius: 6px;
         }
 
         .panel-header {
@@ -240,6 +281,7 @@
             background: var(--bg-color);
             border: 1px solid var(--border-color);
             padding: 1.35rem;
+            border-radius: 6px;
         }
 
         .stat-title {
@@ -280,6 +322,7 @@
             letter-spacing: 0.5px;
             cursor: pointer;
             transition: all 0.15s ease;
+            border-radius: 20px;
         }
 
         .filter-pill:hover, .filter-pill.active {
@@ -301,6 +344,7 @@
             width: 100%; padding: 0.7rem; border: 1px solid var(--border-color);
             background-color: var(--bg-color); color: var(--text-color);
             font-family: inherit; font-size: 0.95rem; transition: border-color 0.2s;
+            border-radius: 4px;
         }
 
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--text-color); }
@@ -311,6 +355,7 @@
             font-weight: 700;
             text-align: center;
             border: 2px solid var(--text-color);
+            border-radius: 4px;
         }
 
         /* Buttons */
@@ -320,15 +365,14 @@
             font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
             border: 2px solid var(--text-color); cursor: pointer;
             transition: all 0.15s ease; text-align: center;
+            border-radius: 4px;
         }
 
         .btn:hover { background-color: var(--bg-color); color: var(--text-color); }
-        
         .btn-outline { background-color: transparent; color: var(--text-color); }
         .btn-outline:hover { background-color: var(--text-color); color: var(--bg-color); }
-
-        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.75rem; letter-spacing: 0.5px; }
-        .btn-xs { padding: 0.2rem 0.45rem; font-size: 0.7rem; letter-spacing: 0px; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.75rem; }
+        .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
         .btn-success { border-color: var(--success-color); background-color: var(--success-color); color: white; }
         .btn-success:hover { background-color: transparent; color: var(--success-color); }
         .btn-warning { border-color: var(--warning-color); color: #856404; }
@@ -339,14 +383,22 @@
         .btn-admin:hover { background-color: transparent; color: var(--admin-color); }
 
         /* Tables */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
+        .table-container { 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            width: 100%;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 700px; }
         th, td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: var(--hover-bg); }
         
         th {
             font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
-            color: var(--secondary-text); font-weight: 700;
+            color: var(--secondary-text); font-weight: 700; background: var(--bg-color);
+            white-space: nowrap;
         }
 
         .cat-label {
@@ -362,6 +414,7 @@
             display: inline-block;
             padding: 0.2rem 0.5rem; font-size: 0.7rem; font-weight: 700;
             text-transform: uppercase; border: 1px solid var(--text-color);
+            border-radius: 12px;
         }
         
         .badge.alert { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
@@ -373,56 +426,89 @@
 
         .actions-cell { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
 
-        /* Category List Tag inside Modal */
-        .cat-tag-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            max-height: 220px;
-            overflow-y: auto;
-        }
-        .cat-tag-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.6rem 0.85rem;
-            border: 1px solid var(--border-color);
-            background: var(--hover-bg);
-        }
-
-        /* Modal Styles */
+        /* Modals */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
-            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+            background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+            padding: 1rem;
         }
         .modal-overlay.active { opacity: 1; pointer-events: all; }
         .modal-content {
-            background: var(--bg-color); padding: 2rem; width: 92%; max-width: 520px;
-            border: 1px solid var(--border-color); transform: translateY(-15px); transition: transform 0.25s ease;
+            background: var(--bg-color); padding: 2rem; width: 100%; max-width: 520px;
+            border: 1px solid var(--border-color); border-radius: 6px; 
+            transform: translateY(-15px); transition: transform 0.25s ease;
             max-height: 90vh; overflow-y: auto;
         }
         .modal-content.modal-lg { max-width: 820px; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
         .close-btn { background: none; border: none; font-size: 1.8rem; line-height: 1; cursor: pointer; color: var(--text-color); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; flex-wrap: wrap; }
 
         /* Toast */
-        .toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 0.75rem; z-index: 1100; }
+        .toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 0.75rem; z-index: 3000; pointer-events: none;}
         .toast {
             background: var(--text-color); color: var(--bg-color); padding: 0.9rem 1.25rem;
-            font-weight: 600; font-size: 0.85rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: 600; font-size: 0.85rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;
             animation: slideIn 0.25s ease, fadeOut 0.25s ease 2.5s forwards;
         }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
+        /* =========================================
+           RESPONSIVE DESIGN 
+           ========================================= */
+        @media (max-width: 900px) {
+            .hamburger { display: block; }
+            
+            aside {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                width: 280px;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            aside.open {
+                transform: translateX(280px);
+            }
+
+            .page-view { padding: 1.5rem; }
+            header { flex-direction: column; align-items: stretch; gap: 1rem; }
+            .header-title-group { width: 100%; justify-content: flex-start; }
+            header h1 { font-size: 1.8rem; }
+        }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .search-bar { max-width: 100%; width: 100%; margin-top: 1rem; }
+            
+            .login-card { padding: 2rem 1.5rem; border: none; box-shadow: none; border-radius: 0; }
+            
+            .toast-container { right: 1rem; bottom: 1rem; left: 1rem; align-items: stretch; }
+            .toast { width: 100%; text-align: center; }
+            
+            .page-view { padding: 1rem; }
+            .panel { padding: 1rem; margin-bottom: 1rem; }
+            .modal-content { padding: 1.5rem; }
+            
+            .header-buttons { display: flex; flex-direction: column; width: 100%; align-items: stretch; }
+            .header-buttons .btn { width: 100%; margin-bottom: 0.5rem; }
+            form .btn { width: 100%; }
+            .modal-actions { flex-direction: column; }
+            .modal-actions .btn { width: 100%; margin: 0; }
+
+            .actions-cell { flex-wrap: wrap; gap: 0.5rem; }
+            .actions-cell .btn { flex: 1 1 calc(50% - 0.5rem); text-align: center; } 
+        }
+
         @media print {
-            aside, header button, .filter-tabs, .actions-cell, .role-switcher, #login-overlay { display: none !important; }
+            aside, header button, .filter-tabs, .actions-cell, .role-switcher, #login-overlay, .hamburger, .sidebar-overlay { display: none !important; }
             main { background: white; }
-            .page-view { padding: 0; }
-            .panel { border: none; padding: 0; }
+            .page-view { padding: 0; display: block !important; }
+            .panel { border: none; padding: 0; margin: 0; }
         }
     </style>
 </head>
@@ -455,30 +541,33 @@
         </div>
     </div>
 
-    <aside>
+    <!-- MOBILE SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside id="app-sidebar">
         <div class="logo">SysInventory.</div>
         <div class="user-greeting" id="user-display">Logged in</div>
         <div id="role-indicator" class="role-badge">Employee</div>
         
         <ul class="nav-menu">
-            <li><a data-target="view-dashboard" class="active">Dashboard</a></li>
-            <li><a data-target="view-items">Upload Stock Left</a></li>
-            <li><a data-target="view-tracker">Stock Movements</a></li>
-            <li><a data-target="view-history">Monthly History</a></li>
-            <li id="nav-audit" class="admin-only" style="display:none;"><a data-target="view-audit">Admin Activity Log</a></li>
-            <li id="nav-accounts" class="admin-only" style="display:none;"><a data-target="view-accounts">Passwords & Users</a></li>
+            <li><a data-target="view-dashboard" class="active" onclick="navigateTo('view-dashboard')">Dashboard</a></li>
+            <li><a data-target="view-items" onclick="navigateTo('view-items')">Upload Stock Left</a></li>
+            <li><a data-target="view-tracker" onclick="navigateTo('view-tracker')">Stock Movements</a></li>
+            <li><a data-target="view-history" onclick="navigateTo('view-history')">Monthly History</a></li>
+            <li id="nav-audit" class="admin-only" style="display:none;"><a data-target="view-audit" onclick="navigateTo('view-audit')">Admin Activity Log</a></li>
+            <li id="nav-accounts" class="admin-only" style="display:none;"><a data-target="view-accounts" onclick="navigateTo('view-accounts')">Passwords & Users</a></li>
         </ul>
 
         <div class="role-switcher">
-            <!-- Only Admins can preview the Employee view without logging out -->
             <div id="admin-view-switcher" style="display:none;">
                 <label style="font-size: 0.72rem;">Admin View Mode:</label>
-                <select id="role-select" onchange="switchRole(this.value)">
+                <select id="role-select" onchange="switchRole(this.value)" style="margin-bottom: 0.5rem;">
                     <option value="admin">Administrator (Manage)</option>
                     <option value="employee">Preview Employee View</option>
                 </select>
             </div>
-            <button class="btn btn-outline btn-sm admin-only" onclick="resetDemoData()" style="width:100%; display:none;" title="Reset to default 5-10 stock counts">Reset Default Data</button>
+            <button class="btn btn-outline btn-sm admin-only" onclick="resetDemoData()" style="width:100%; display:none;" title="Reset default data">Reset Default Data</button>
             <button class="btn btn-outline btn-danger btn-sm" onclick="logoutUser()" style="width:100%;">Logout / Switch User</button>
         </div>
     </aside>
@@ -487,11 +576,14 @@
         <!-- DASHBOARD VIEW -->
         <div id="view-dashboard" class="page-view active">
             <header>
-                <div>
-                    <h1 id="dash-title">Overview</h1>
-                    <p class="header-sub">Live status of shop materials (5–10 target scale) and submitted reports.</p>
+                <div class="header-title-group">
+                    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                    <div>
+                        <h1 id="dash-title">Overview</h1>
+                        <p class="header-sub">Live status of shop materials (5–10 target scale) and submitted reports.</p>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <div class="header-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button class="btn" onclick="navigateTo('view-items')">Upload Stock Left →</button>
                     <button class="btn btn-outline admin-only" onclick="openCategoryModal()" style="display:none;">+ Categories</button>
                     <button class="btn btn-outline admin-only" onclick="openAddModal()" style="display:none;">+ Add Material</button>
@@ -522,7 +614,6 @@
             </div>
 
             <div class="content-grid single-col">
-                <!-- Pending Requests Panel -->
                 <div class="panel" style="border-left: 4px solid var(--admin-color);">
                     <div class="panel-header">
                         <h2>Active Submitted Stock Reports</h2>
@@ -546,7 +637,6 @@
                     </div>
                 </div>
 
-                <!-- Needs Attention Panel -->
                 <div class="panel">
                     <div class="panel-header">
                         <h2>Materials Below Target Quantity (Restock Checklist)</h2>
@@ -578,30 +668,30 @@
         <!-- UPLOAD STOCK LEFT / INVENTORY MASTER VIEW -->
         <div id="view-items" class="page-view">
             <header>
-                <div>
-                    <h1 id="items-page-title">Upload Stock Left</h1>
-                    <p class="header-sub" id="items-page-sub">Enter the physical <strong>Stock Left</strong> count for each material and click <strong>Submit Stock Left Report</strong>.</p>
+                <div class="header-title-group">
+                    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                    <div>
+                        <h1 id="items-page-title">Upload Stock Left</h1>
+                        <p class="header-sub" id="items-page-sub">Enter the physical <strong>Stock Left</strong> count for each material and click <strong>Submit Stock Left Report</strong>.</p>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <div class="header-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button class="btn btn-outline admin-only" onclick="openCategoryModal()" style="display:none;">+ Manage Categories</button>
                     <button class="btn btn-outline admin-only" onclick="openAddModal()" style="display:none;">+ Add Material</button>
                 </div>
             </header>
             
             <div class="panel">
-                <!-- Report Submission Bar -->
                 <div style="background: var(--hover-bg); border: 1px solid var(--border-color); padding: 1rem; margin-bottom: 1.25rem; display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 240px;">
                         <label style="font-size: 0.75rem; margin-bottom: 0.25rem;">Report Note / Reason for Usage (Optional):</label>
-                        <input type="text" id="report-note-input" placeholder="e.g. End of week count, 1 roll damaged, rush job used 3 sheets..." style="padding: 0.5rem 0.75rem;">
+                        <input type="text" id="report-note-input" placeholder="e.g. End of week count, 1 roll damaged..." style="padding: 0.5rem 0.75rem;">
                     </div>
                     <button class="btn btn-success" onclick="submitStockLeftReport()">Submit Stock Left Report</button>
                 </div>
 
                 <div class="panel-header">
-                    <div class="filter-tabs" id="category-filter-tabs">
-                        <!-- Dynamically populated category pills -->
-                    </div>
+                    <div class="filter-tabs" id="category-filter-tabs"></div>
                     <input type="text" id="search-input" class="search-bar" placeholder="Search material or SKU...">
                 </div>
                 <div class="table-container">
@@ -627,11 +717,14 @@
         <!-- STOCK MOVEMENTS & TRACKER VIEW -->
         <div id="view-tracker" class="page-view">
             <header>
-                <div>
-                    <h1>Stock Movements & Order Calculator</h1>
-                    <p class="header-sub">Track how stocks move (Used vs Restocked) and see how much needs to be ordered to hit Target Qty (5–10 units).</p>
+                <div class="header-title-group">
+                    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                    <div>
+                        <h1>Stock Movements & Order Calculator</h1>
+                        <p class="header-sub">Track how stocks move (Used vs Restocked) and see how much needs to be ordered to hit Target Qty (5–10 units).</p>
+                    </div>
                 </div>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <div class="header-buttons" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                     <button class="btn btn-outline admin-only" onclick="startNewMonthCycle()" style="display:none;">Start New Month Cycle</button>
                     <button class="btn" onclick="navigateTo('view-items')">Update Stock Counts</button>
                 </div>
@@ -667,9 +760,12 @@
         <!-- MONTHLY SUBMISSION HISTORY VIEW -->
         <div id="view-history" class="page-view">
             <header>
-                <div>
-                    <h1>Monthly Order & Submission History</h1>
-                    <p class="header-sub">Track all employee stock-left submissions, notes, and monthly restock orders.</p>
+                <div class="header-title-group">
+                    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                    <div>
+                        <h1>Monthly Order & Submission History</h1>
+                        <p class="header-sub">Track all employee stock-left submissions, notes, and monthly restock orders.</p>
+                    </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                     <label style="margin: 0;">Filter Month:</label>
@@ -706,9 +802,12 @@
         <!-- ADMIN ACTIVITY LOG VIEW -->
         <div id="view-audit" class="page-view">
             <header>
-                <div>
-                    <h1>Admin Activity & Tracking Log</h1>
-                    <p class="header-sub">Complete chronological trail of stock updates, target adjustments, category changes, and approvals.</p>
+                <div class="header-title-group">
+                    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                    <div>
+                        <h1>Admin Activity & Tracking Log</h1>
+                        <p class="header-sub">Complete chronological trail of stock updates, target adjustments, category changes, and approvals.</p>
+                    </div>
                 </div>
                 <button class="btn btn-outline btn-sm" onclick="clearAuditLog()">Clear Log</button>
             </header>
@@ -732,9 +831,12 @@
         <!-- PASSWORDS & USER MANAGEMENT VIEW (ADMIN ONLY) -->
         <div id="view-accounts" class="page-view">
             <header>
-                <div>
-                    <h1>Passwords & User Accounts</h1>
-                    <p class="header-sub">Manage default role passwords or add individual staff accounts.</p>
+                <div class="header-title-group">
+                    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                    <div>
+                        <h1>Passwords & User Accounts</h1>
+                        <p class="header-sub">Manage default role passwords or add individual staff accounts.</p>
+                    </div>
                 </div>
             </header>
             <div class="content-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
@@ -884,14 +986,14 @@
                     <tbody id="sub-modal-body"></tbody>
                 </table>
             </div>
-            <div id="sub-modal-actions" style="display: flex; justify-content: flex-end; gap: 0.75rem;"></div>
+            <div id="sub-modal-actions" class="modal-actions"></div>
         </div>
     </div>
 
     <div class="toast-container" id="toast-container"></div>
 
     <script>
-        /* --- State & Data (Small Scale 5-10 Stock Version V4 + Auth) --- */
+        /* --- State & Data (Google Sheets Integration Preserved) --- */
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby901Pntb9Lij2zdFC3UARSdcRcHy6J2Em9jdP0BYmCCyTXybG_B8V_SKjBr8WzAhgi/exec';
 
         const STORAGE_KEYS = {
@@ -903,14 +1005,13 @@
             SESSION: 'sysActiveSessionV4'
         };
 
-        // Default Accounts (Admin: admin123 | Employee: staff123)
         const DEFAULT_ACCOUNTS = [
             { name: 'Admin', role: 'admin', pass: 'admin123' },
             { name: 'Employee', role: 'employee', pass: 'staff123' }
         ];
 
         let selectedLoginTab = 'employee';
-        let authenticatedRole = null; // 'admin' or 'employee'
+        let authenticatedRole = null;
         let currentUserName = 'Employee';
         let currentRole = 'employee';
         let activeCategory = 'ALL';
@@ -930,6 +1031,15 @@
             setTimeout(() => { toast.remove(); }, 3000);
         }
 
+        function toggleSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if(sidebar && overlay) {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            }
+        }
+
         /* --- Authentication & Login Logic --- */
         function selectLoginRole(role) {
             selectedLoginTab = role;
@@ -944,7 +1054,6 @@
             const passInput = document.getElementById('login-password').value.trim();
             const errorEl = document.getElementById('login-error');
 
-            // Verify against accounts list for the chosen role
             const matchedAccount = accounts.find(acc => 
                 acc.role === selectedLoginTab && 
                 String(acc.pass) === passInput &&
@@ -973,7 +1082,6 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('user-display').textContent = `User: ${currentUserName}`;
             
-            // Only show the sidebar view-mode switcher if logged in as Administrator
             const adminSwitcher = document.getElementById('admin-view-switcher');
             adminSwitcher.style.display = authenticatedRole === 'admin' ? 'block' : 'none';
             
@@ -990,6 +1098,9 @@
             authenticatedRole = null;
             document.getElementById('login-password').value = '';
             document.getElementById('login-overlay').style.display = 'flex';
+            
+            const sidebar = document.getElementById('app-sidebar');
+            if (sidebar && sidebar.classList.contains('open')) toggleSidebar();
             navigateTo('view-dashboard');
         }
 
@@ -1011,7 +1122,6 @@
 
         /* --- Role Management --- */
         function switchRole(role) {
-            // Prevent employees from switching to admin via console or DOM manipulation
             if (authenticatedRole !== 'admin' && role === 'admin') {
                 role = 'employee';
             }
@@ -1044,20 +1154,21 @@
         }
 
         /* --- Sidebar Navigation --- */
-        const navLinks = document.querySelectorAll('.nav-menu a');
-        const pageViews = document.querySelectorAll('.page-view');
-
         function navigateTo(targetId) {
-            navLinks.forEach(n => n.classList.remove('active'));
-            pageViews.forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-menu a').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            
             const targetLink = document.querySelector(`[data-target="${targetId}"]`);
             if (targetLink) targetLink.classList.add('active');
-            document.getElementById(targetId).classList.add('active');
-        }
+            
+            const targetPage = document.getElementById(targetId);
+            if (targetPage) targetPage.classList.add('active');
 
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => { navigateTo(link.getAttribute('data-target')); });
-        });
+            const sidebar = document.getElementById('app-sidebar');
+            if (sidebar && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        }
 
         /* --- Load & Save Data (Google Sheets Integration) --- */
         async function loadData() {
@@ -1083,7 +1194,6 @@
                 console.error("Failed to load from Sheets, checking local backup...", error);
             }
 
-            // FALLBACK: Load from local storage or use initial demo data
             const storedCat = localStorage.getItem(STORAGE_KEYS.CAT);
             const storedInv = localStorage.getItem(STORAGE_KEYS.INV);
             const storedSub = localStorage.getItem(STORAGE_KEYS.SUB);
@@ -1140,25 +1250,6 @@
                             { sku: 'STK-GLS', cat: 'Stickers', name: 'Sticker - Glossy', prevQty: 7, leftQty: 3, used: 4, targetQty: 8, orderQty: 5, unit: 'Rolls' },
                             { sku: 'SNT-3MM', cat: 'Sintraboard', name: 'Sintraboard - 3mm', prevQty: 9, leftQty: 4, used: 5, targetQty: 10, orderQty: 6, unit: 'Sheets' }
                         ]
-                    },
-                    {
-                        id: 'REP-9104',
-                        month: 'October 2026',
-                        date: 'Oct 20, 2026',
-                        by: 'Employee',
-                        note: 'Weekly tarp & sticker check',
-                        status: 'Pending',
-                        snapshots: inventoryData.map(i => ({
-                            sku: i.sku,
-                            cat: i.cat,
-                            name: i.name,
-                            prevQty: Math.min(i.targetQty, i.qty + 2),
-                            leftQty: i.qty,
-                            used: 2,
-                            targetQty: i.targetQty,
-                            orderQty: Math.max(0, i.targetQty - i.qty),
-                            unit: i.unit
-                        }))
                     }
                 ];
             }
@@ -1167,8 +1258,7 @@
                 auditLog = JSON.parse(storedLog);
             } else {
                 auditLog = [
-                    { time: 'Oct 20, 04:15 PM', role: 'Employee', action: 'Stock Report Submitted', details: 'Submitted REP-9104 (Weekly tarp & sticker check)' },
-                    { time: 'Sep 28, 05:30 PM', role: 'Admin', action: 'Report Approved', details: 'Approved REP-8421 and restocked items to 5–10 target levels' }
+                    { time: 'Sep 28, 05:30 PM', role: 'Admin', action: 'Report Approved', details: 'Approved REP-8421 and restocked items' }
                 ];
             }
 
@@ -1205,7 +1295,7 @@
         }
 
         function resetDemoData() {
-            if (confirm('Reset all inventory and history back to the default 5–10 small stock numbers?')) {
+            if (confirm('Reset all inventory and history back to default demo counts?')) {
                 Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
                 activeCategory = 'ALL';
                 loadData();
@@ -1290,7 +1380,7 @@
         function deleteCategory(catName) {
             const inUse = inventoryData.some(i => i.cat === catName);
             if (inUse) {
-                alert(`Cannot delete "${catName}" because materials are still assigned to it. Move or delete those materials first.`);
+                alert(`Cannot delete "${catName}" because materials are still assigned to it.`);
                 return;
             }
             categories = categories.filter(c => c.name !== catName);
@@ -1343,7 +1433,6 @@
             showToast(`Restocked ${item.name} to ${item.targetQty} ${item.unit}!`);
         }
 
-        /* --- Admin Inline Target Qty Update --- */
         function updateTargetQtyInline(sku, val) {
             const parsed = parseInt(val, 10);
             const item = inventoryData.find(i => i.sku === sku);
@@ -1357,7 +1446,6 @@
             }
         }
 
-        /* --- Employee: Submit Stock Left Report --- */
         function submitStockLeftReport() {
             const now = new Date();
             const monthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -1413,9 +1501,8 @@
             navigateTo('view-history');
         }
 
-        /* --- Start New Month Cycle (Admin) --- */
         function startNewMonthCycle() {
-            if (!confirm('Start a new monthly tracking cycle? This sets Current Stock Left as the new Starting Qty and resets Restocked (+) and Used (-) counters to 0.')) return;
+            if (!confirm('Start a new monthly tracking cycle? This sets Current Stock Left as the new Starting Qty and resets movement counters.')) return;
             inventoryData.forEach(item => {
                 item.startQty = item.qty;
                 item.periodIn = 0;
@@ -1427,7 +1514,6 @@
             showToast('New monthly cycle started!');
         }
 
-        /* --- Export Restock CSV --- */
         function exportRestockCSV() {
             const itemsToOrder = inventoryData.filter(i => i.qty < i.targetQty);
             if (itemsToOrder.length === 0) {
@@ -1450,7 +1536,6 @@
             showToast('Restock CSV downloaded!');
         }
 
-        /* --- UI Rendering --- */
         function getStockStatus(qty, targetQty) {
             const isCritical = qty <= 2 && qty < targetQty;
             const needsOrder = qty < targetQty;
@@ -1544,11 +1629,11 @@
             document.getElementById('dash-total-items').textContent = inventoryData.length;
             document.getElementById('dash-total-cats').textContent = `Across ${categories.length} categories`;
             document.getElementById('dash-low-stock').textContent = belowTargetCount;
-            document.getElementById('dash-critical-count').textContent = `${criticalCount} critical (2 or fewer left)`;
+            document.getElementById('dash-critical-count').textContent = `${criticalCount} critical`;
             document.getElementById('dash-units-to-order').textContent = totalUnitsToOrder;
 
             if (belowTargetCount === 0) {
-                alertBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#4a4a4a;">All materials meet their 5–10 Target Quantity!</td></tr>`;
+                alertBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#4a4a4a;">All materials meet their target quantity!</td></tr>`;
             }
 
             triggerSearch();
@@ -1559,7 +1644,6 @@
             renderAccountsTable();
         }
 
-        /* --- Stock Movements Table --- */
         function renderMovementsTable() {
             const movementsBody = document.getElementById('movements-body');
             movementsBody.innerHTML = '';
@@ -1575,13 +1659,12 @@
                         <td class="text-red">-${item.periodOut} ${item.unit}</td>
                         <td><strong>${item.qty} ${item.unit}</strong></td>
                         <td>${item.targetQty} ${item.unit}</td>
-                        <td>${toOrder > 0 ? `<strong class="text-red">+${toOrder} ${item.unit}</strong>` : `<span class="text-green">Full (${item.targetQty}/${item.targetQty})</span>`}</td>
+                        <td>${toOrder > 0 ? `<strong class="text-red">+${toOrder} ${item.unit}</strong>` : `<span class="text-green">Full</span>`}</td>
                     </tr>
                 `;
             });
         }
 
-        /* --- Monthly History Filter & Table --- */
         function populateMonthFilter() {
             const select = document.getElementById('month-filter');
             const currentVal = select.value;
@@ -1607,7 +1690,7 @@
             });
 
             if (filteredHistory.length === 0) {
-                histBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No stock reports found for this month.</td></tr>`;
+                histBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No stock reports found.</td></tr>`;
             }
 
             filteredHistory.forEach(req => {
@@ -1622,7 +1705,7 @@
                         <td>${req.date}</td>
                         <td>${req.by}</td>
                         <td style="font-size:0.85rem; color:var(--secondary-text);">${req.note || '—'}</td>
-                        <td><strong>${itemsNeedingOrder.length} SKUs</strong> (${totalUnitsToOrder} units to order)</td>
+                        <td><strong>${itemsNeedingOrder.length} SKUs</strong> (${totalUnitsToOrder} units)</td>
                         <td><span class="badge ${badgeClass}">${req.status}</span></td>
                         <td class="actions-cell">
                             <button class="btn btn-outline btn-sm" onclick="openSubmissionModal('${req.id}')">View / Manage</button>
@@ -1645,7 +1728,7 @@
                         <td>${itemsNeedingOrder.length} materials below target</td>
                         <td><span class="badge ${badgeClass}">${req.status}</span></td>
                         <td class="actions-cell">
-                            <button class="btn btn-outline btn-sm" onclick="openSubmissionModal('${req.id}')">View Submitted Stocks</button>
+                            <button class="btn btn-outline btn-sm" onclick="openSubmissionModal('${req.id}')">View Report</button>
                         </td>
                     </tr>
                 `;
@@ -1657,7 +1740,6 @@
             }
         }
 
-        /* --- Render Admin Audit Log --- */
         function renderAuditTable() {
             const tbody = document.getElementById('audit-body');
             if (!tbody) return;
@@ -1687,7 +1769,6 @@
             }
         }
 
-        /* --- Accounts & Passwords Management --- */
         function renderAccountsTable() {
             const tbody = document.getElementById('accounts-body');
             if (!tbody) return;
@@ -1740,7 +1821,6 @@
             }
         }
 
-        /* --- Modal: View Submitted Stocks --- */
         let activeSubmissionId = null;
 
         function openSubmissionModal(reqId) {
@@ -1825,8 +1905,8 @@
                         draftStockLeft[invItem.sku] = invItem.qty;
                     }
                 });
-                logActivity('Report Approved', `Approved ${reqId} and refilled materials to 5–10 target quantities`);
-                showToast(`Report ${reqId} Approved! Stocks refilled to Target Qty.`);
+                logActivity('Report Approved', `Approved ${reqId} and refilled materials to target quantities`);
+                showToast(`Report ${reqId} Approved! Stocks refilled.`);
             } else {
                 req.status = 'Rejected';
                 logActivity('Report Rejected', `Rejected stock report ${reqId}`);
@@ -1838,7 +1918,6 @@
             closeSubmissionModal();
         }
 
-        /* --- Admin Modal: Add or Edit Material & Target Qty --- */
         const itemModal = document.getElementById('item-modal');
         const itemForm = document.getElementById('item-form');
 
@@ -1856,7 +1935,7 @@
             renderCategoriesUI();
             const item = inventoryData.find(i => i.sku === sku);
             if (!item) return;
-            document.getElementById('item-modal-title').textContent = `Edit Material & Target Qty (${item.sku})`;
+            document.getElementById('item-modal-title').textContent = `Edit Material (${item.sku})`;
             document.getElementById('edit-sku').value = item.sku;
             document.getElementById('item-cat').value = item.cat;
             document.getElementById('item-name').value = item.name;
@@ -1889,8 +1968,8 @@
                     item.targetQty = targetQty;
                     item.unit = unit;
                     draftStockLeft[item.sku] = qty;
-                    logActivity('Material Edited', `Updated ${name} (${editSku}): Stock ${qty}/${targetQty} ${unit}`);
-                    showToast(`Updated ${name} (Target Qty: ${targetQty})`);
+                    logActivity('Material Edited', `Updated ${name} (${editSku})`);
+                    showToast(`Updated ${name}`);
                 }
             } else {
                 const catObj = categories.find(c => c.name === cat);
@@ -1908,8 +1987,8 @@
                     periodOut: 0
                 });
                 draftStockLeft[autoSku] = qty;
-                logActivity('Material Added', `Added ${name} (${autoSku}) under ${cat} with Target Qty ${targetQty}`);
-                showToast(`Added ${name} (${autoSku})`);
+                logActivity('Material Added', `Added ${name} (${autoSku})`);
+                showToast(`Added ${name}`);
             }
 
             saveData();
@@ -1921,14 +2000,13 @@
             const item = inventoryData.find(i => i.sku === sku);
             if (confirm(`Delete material ${item ? item.name : sku}?`)) {
                 inventoryData = inventoryData.filter(i => i.sku !== sku);
-                logActivity('Material Deleted', `Deleted ${item ? item.name : sku} (${sku})`);
+                logActivity('Material Deleted', `Deleted material (${sku})`);
                 saveData();
                 updateUI();
-                showToast(`Material ${sku} deleted.`);
+                showToast(`Material deleted.`);
             }
         }
 
-        /* --- Search & Filtering --- */
         const searchInput = document.getElementById('search-input');
         function triggerSearch() {
             const query = searchInput.value.toLowerCase();
@@ -1947,7 +2025,6 @@
             if (e.target === document.getElementById('category-modal')) closeCategoryModal();
         });
 
-        // Initialize App once the DOM has fully loaded
         window.addEventListener('DOMContentLoaded', async () => {
             await loadData();
             const savedSession = sessionStorage.getItem(STORAGE_KEYS.SESSION);
